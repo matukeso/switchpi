@@ -5,6 +5,10 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+
+#include "switch.h"
+struct model m;
+
 int getbyte( int fd )
 {
     unsigned char ch = 0;
@@ -26,11 +30,6 @@ int read_until_f7( int fd) {
 }
 
 
-struct model {
-  int pgm_a;
-  int pst_b;
-  int fader;
-}m;
 
 
 void swap( int *a, int*b){
@@ -44,14 +43,25 @@ void disp()
   printf("<%d, %d, %d>\n", m.pgm_a, m.pst_b, m.fader );
 }
 
-int main()
-{
-  int fd = open( "/dev/dmmidi1", O_RDONLY);
-  printf("open %d\n", fd);
 
+
+int can_read(int fd )
+{
+  struct timeval tv = {0,0};
+  fd_set rfds;
+  FD_ZERO( &rfds );
+  FD_SET(fd, &rfds );
+  int r = select( fd+1, &rfds, NULL, NULL, &tv );
+  if (r > 0)
+    return 1;
+  else
+    return 0;
+}
   int a_or_b = 0;
   int fading = 0;
-  while(1){
+
+void proc_command( int fd )
+{
     int cmd = getbyte(fd);
     switch(cmd){
     case 0xf0:
@@ -72,24 +82,34 @@ int main()
 	if( arg1 == 0x12 ){
 	  fading = arg2;
 	  //printf("fade : %d\n", arg2 );
+	  if( can_read( fd ) ){
+	    printf("c-c\n");
+	    proc_command(fd);
+	  }
 
-	  if( m.fader<64 && fading >= 64 ||
-	      fading < 64 && m.fader >= 64 ){
+	  int fade_to_0 = (m.fader > 0  && fading==0);
+	  int fade_to_127 = (fading == 127 && m.fader < 127);
+	  if( fading != m.start_fader&&
+	      (fade_to_0 || fade_to_127) ){
+	    
+	    printf("swap!\n");
 	    swap(&m.pgm_a ,&m.pst_b );
+
+	    m.start_fader = fading;
 	  }
 	  m.fader = fading;
 	  disp();
 	      
 	  break;
 	}
-	printf("b0 %x %x\n", arg1, arg2);
+      	printf("b0 %x %x\n", arg1, arg2);
       }
       break;
       
     case 0xc0:
       {
 	int ch = getbyte(fd);
-	//	printf("CHG(%d) : %d\n", a_or_b, ch );
+	printf("CHG(%d) : %d\n", a_or_b, ch+1 );
 
 	if( a_or_b == 0 ){
 	  m.pgm_a = ch + 1;
@@ -102,10 +122,16 @@ int main()
 	
       }
       break;
-    deafult:
+    default:
       printf("CMD %x\n", cmd );
 
     }
-    
+}
+
+int midiloop(int fd)
+{
+
+  while(1){
+    proc_command( fd );    
   }
 }
