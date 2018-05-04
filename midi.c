@@ -176,8 +176,7 @@ void init_midi(int fd)
   midi.fader = 0;
   midi.start_fader = 0;
 
-  int r = write( fd, init_cmd, sizeof(init_cmd) );
-  printf("midi_init(%d)\n", r );
+
 }
 
 int midiloop(int fd, int fdlog)
