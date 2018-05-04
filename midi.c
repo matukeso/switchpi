@@ -7,6 +7,11 @@
 
 
 #include "switch.h"
+
+
+int current_tc();
+
+
 struct model m;
 
 int getbyte( int fd )
@@ -57,6 +62,8 @@ int can_read(int fd )
   else
     return 0;
 }
+
+
   int a_or_b = 0;
   int fading = 0;
 
