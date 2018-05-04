@@ -1,5 +1,11 @@
 #include "dialog.h"
 #include "ui_dialog.h"
+#include <pigpiod_if2.h>
+
+extern int g_gpfd;
+
+static const int GPIO_INPUTBUTTON = 12;
+
 
 Dialog::Dialog(QWidget *parent) :
     QDialog(parent),
@@ -9,6 +15,10 @@ Dialog::Dialog(QWidget *parent) :
     UpdateUiTimer = new QTimer(this);
     connect(UpdateUiTimer, SIGNAL(timeout()), this, SLOT(OnUpdateUI()) );
     UpdateUiTimer->start(500);
+
+
+    set_mode( g_gpfd, GPIO_INPUTBUTTON, PI_INPUT );
+    set_pull_up_down( g_gpfd, GPIO_INPUTBUTTON, PI_PUD_DOWN);
 }
 
 Dialog::~Dialog()
@@ -20,9 +30,14 @@ Dialog::~Dialog()
 
 #include "switch.h"
 
-
+int g_prev_gpio;
 void Dialog::OnUpdateUI()
 {
+  int gpio = gpio_read( g_gpfd, GPIO_INPUTBUTTON );
+  if( gpio == 1  && g_prev_gpio == 0 ){
+    on_pushButton_clicked();
+  }
+  g_prev_gpio = gpio;
 
   QString maintxt = ( g_fd > 0 ) ? QString::fromUtf8("●保存中：") : QString::fromUtf8("×待機中：");
 

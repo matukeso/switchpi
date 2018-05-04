@@ -38,12 +38,17 @@ void *run_sendpgm( void *arg)
 #include <sys/stat.h>
 #include <fcntl.h>
 
+
+int g_gpfd;
+
 int main(int argc, char *argv[])
 {
 
   int gpfd = pigpio_start(NULL,NULL);
   if( gpfd < 0 )
     return 99;
+
+  g_gpfd = gpfd;
   
   struct midiarg marg = {0, 0};
 
