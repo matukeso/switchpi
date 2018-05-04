@@ -48,11 +48,8 @@ void send_pgm(int gpfd, struct model *m)
   wave_delete( gpfd, wave );
 }
 
-int gpio_loop()
+int gpio_loop(int gpfd)
 {
-  int gpfd = pigpio_start(NULL,NULL);
-
-
   set_mode( gpfd, GPIO_VIDEOSEL, PI_OUTPUT );
   gpio_write( gpfd, GPIO_VIDEOSEL, 0 );
 
@@ -74,10 +71,7 @@ int gpio_loop()
     send_pgm( gpfd, &mcopy );
   }
   
-  
-  
   pigpio_stop(gpfd);
-
 }
 
 
@@ -87,6 +81,7 @@ int gpio_loop()
 #include <fcntl.h>
 
 extern int midiloop(int fd);
+extern int tcserloop(int fd);
 
 void *run_midi(void *arg)
 {
@@ -94,14 +89,25 @@ void *run_midi(void *arg)
   return NULL;
 }
 
+void *run_tcser( void *arg)
+{
+  tcserloop( (int)arg);
+  return NULL;
+}
+
 int main()
 {
-  int fd = open( "/dev/midi1", O_RDONLY);
+  int gpfd = pigpio_start(NULL,NULL);
+
+  int fd = open( "/dev/midi1", O_RDWR);
   printf("open %d\n", fd);
 
 
   pthread_t thmidi;
   pthread_create( &thmidi, NULL, run_midi, (void*)fd );
 
-  gpio_loop();
+  pthread_t th_tcser;
+  pthread_create( &th_tcser, NULL, run_tcser, (void*)gpfd );
+
+  gpio_loop(gpfd);
 }

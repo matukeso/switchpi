@@ -40,7 +40,7 @@ void swap( int *a, int*b){
 
 void disp()
 {
-  printf("<%d, %d, %d>\n", m.pgm_a, m.pst_b, m.fader );
+  //  printf("<%d, %d, %d>\n", m.pgm_a, m.pst_b, m.fader );
 }
 
 
@@ -95,6 +95,7 @@ void proc_command( int fd )
 	    printf("swap!\n");
 	    swap(&m.pgm_a ,&m.pst_b );
 
+	    printf("%d QPL:%d\n", current_tc(), m.pgm_a);
 	    m.start_fader = fading;
 	  }
 	  m.fader = fading;
@@ -109,8 +110,11 @@ void proc_command( int fd )
     case 0xc0:
       {
 	int ch = getbyte(fd);
-	printf("CHG(%d) : %d\n", a_or_b, ch+1 );
-
+	//	printf("CHG(%d) : %d\n",  a_or_b, ch+1 );
+	if( a_or_b == 0 ){
+	  printf("%d QPL:%d\n", current_tc(), ch+1);
+	  
+	}
 	if( a_or_b == 0 ){
 	  m.pgm_a = ch + 1;
 	}
@@ -128,9 +132,28 @@ void proc_command( int fd )
     }
 }
 
+
+  static const unsigned char  init_cmd[] =
+    {
+      0xb0, 00, 00, 0xb0, 0x20, 00, 0xc0, 0,
+      0xb0, 00, 01, 0xb0, 0x20, 00, 0xc0, 1,
+      0xb0, 0x12, 00 
+    };
+
+void init_midi(int fd)
+{
+  m.pgm_a = 1;
+  m.pst_b = 2;
+  m.fader = 0;
+  m.start_fader = 0;
+
+  int r = write( fd, init_cmd, sizeof(init_cmd) );
+  printf("init(%d)",r );
+}
+
 int midiloop(int fd)
 {
-
+  init_midi(fd);
   while(1){
     proc_command( fd );    
   }
