@@ -72,7 +72,7 @@ void doOutputTclog(int fdlog)
 {
 
     char tc[12];
-    sprintf(tc, "%d", current_tc() );
+    sprintf(tc, "%08d", current_tc() );
     
     
 
