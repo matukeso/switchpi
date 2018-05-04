@@ -6,7 +6,16 @@ struct model {
   int start_fader;
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
 
-extern struct model m;
+extern struct model midi;
+extern volatile int g_fd;
+extern int current_tc();
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 

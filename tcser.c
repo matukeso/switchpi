@@ -7,6 +7,8 @@
 
 #include <string.h>
 
+#include "switch.h"
+
 int dateDfToFrame(int hhmmssff[]);
 const int *DfFrameToDate(int f);
 

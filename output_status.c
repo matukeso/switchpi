@@ -67,7 +67,7 @@ int sendpgm_loop(int gpfd)
   while(1){
     char buf[8];
     read( timfd, buf, sizeof(buf) );
-    struct model mcopy = m;
+    struct model mcopy = midi;
     send_pgm( gpfd, &mcopy );
   }
   
