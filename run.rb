@@ -22,6 +22,6 @@ log =  Time.now.strftime("%Y%m%dT%H%M%S")
 abspath = dir + "/" + log + ".log"
 puts("file is #{abspath}");
 
-
+system( "./switchlog #{abspath}");
 
 

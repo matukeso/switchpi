@@ -67,7 +67,27 @@ int can_read(int fd )
   int a_or_b = 0;
   int fading = 0;
 
-void proc_command( int fd )
+
+void doOutputTclog(int fdlog)
+{
+  if( fdlog > 0 ) {
+
+    char tc[12];
+    sprintf(tc, "%d", current_tc() );
+    
+    
+
+    char buf[512];
+    
+    int len  =    sprintf(buf, "%c%c:%c%c:%c%c.%c%c QPL:%d\n",
+			  tc[0],tc[1],tc[2],tc[3],tc[4],tc[5],tc[6],tc[7],
+			  m.pgm_a-1);
+    write(fdlog, buf, len );
+  }
+}
+
+
+void proc_command( int fd, int fdlog )
 {
     int cmd = getbyte(fd);
     switch(cmd){
@@ -91,7 +111,7 @@ void proc_command( int fd )
 	  //printf("fade : %d\n", arg2 );
 	  if( can_read( fd ) ){
 	    printf("c-c\n");
-	    proc_command(fd);
+	    proc_command(fd, fdlog);
 	  }
 
 	  int fade_to_0 = (m.fader > 0  && fading==0);
@@ -102,7 +122,7 @@ void proc_command( int fd )
 	    printf("swap!\n");
 	    swap(&m.pgm_a ,&m.pst_b );
 
-	    printf("%d QPL:%d\n", current_tc(), m.pgm_a);
+	    doOutputTclog( fdlog );
 	    m.start_fader = fading;
 	  }
 	  m.fader = fading;
@@ -117,13 +137,11 @@ void proc_command( int fd )
     case 0xc0:
       {
 	int ch = getbyte(fd);
-	//	printf("CHG(%d) : %d\n",  a_or_b, ch+1 );
-	if( a_or_b == 0 ){
-	  printf("%d QPL:%d\n", current_tc(), ch+1);
-	  
-	}
+	printf("CHG(%d) : %d\n",  a_or_b, ch+1 );
 	if( a_or_b == 0 ){
 	  m.pgm_a = ch + 1;
+	  doOutputTclog( fdlog );
+
 	}
 	  
 	if( a_or_b == 1 ){
@@ -155,13 +173,13 @@ void init_midi(int fd)
   m.start_fader = 0;
 
   int r = write( fd, init_cmd, sizeof(init_cmd) );
-  printf("init(%d)",r );
+  printf("midi_init(%d)\n", r );
 }
 
-int midiloop(int fd)
+int midiloop(int fd, int fdlog)
 {
   init_midi(fd);
   while(1){
-    proc_command( fd );    
+    proc_command( fd, fdlog );    
   }
 }
