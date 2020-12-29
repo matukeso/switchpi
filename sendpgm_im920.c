@@ -9,28 +9,33 @@
 #include "switch.h"
 
 
-void send_pgm(int gpfd, struct model *m)
+static void send_pgm(int gpfd, struct model *m)
 {
   int pgm_bit = m->pgm_a == 0 ? 0 : 1<<(m->pgm_a-1);
   int pst_bit = m->pst_b == 0 ? 0 : 1<<(m->pst_b-1);
   
   char buf[32];
-  int len = sprintf(buf, "TXDT 0%x00", pgm_bit | pst_bit );
-  write( gpfd, buf, len ); 
+  int len = sprintf(buf, "TXDT 0%x00\r\n", pgm_bit | pst_bit );
+  write( gpfd, buf, len );
+
+  char rbuf[4];
+  read( gpfd, rbuf, 4 );
+  
 }
 
 int sendpgm_loop(int fd)
 {
+  printf("senepgm im920\n");
   if( fd > 0 )
     {
       struct termios tio;
       tcgetattr(fd, &tio);
-      cfsetspeed(&tio, B19200);
       tio.c_iflag = IGNBRK | IGNPAR | IXON ;
       tio.c_oflag = 0;
       tio.c_cflag = CS8 | CREAD | CLOCAL ;
       tio.c_lflag = 0;
       
+      cfsetspeed(&tio, B19200);
       tcflush(fd, TCIFLUSH);
       tcsetattr(fd, TCSANOW, &tio);
     }
@@ -64,8 +69,18 @@ void send_232c_ato(){
 
 
 #ifdef SINGLE
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+struct model midi;
+
 int main()
 {
-  sendpgm_loop();
+  int  fd = open( "/dev/ttyUSB0", O_RDWR | O_NOCTTY | O_NDELAY);
+
+  midi.pgm_a = 2;
+  sendpgm_loop(fd);
 }
 #endif

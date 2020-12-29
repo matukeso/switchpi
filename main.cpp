@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
 
   g_gpfd = gpfd;
 
-  if( 0  ){
+  if( 1  ){
     struct midiarg marg = {0, 0};
     
     marg.fd_midi = gpfd;    

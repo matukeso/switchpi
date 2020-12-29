@@ -127,6 +127,8 @@ static void proc_command( int fd, int fdlog )
 }
 void init_oc(int fd)
 {
+
+  printf("init open-collector\n");
   midi.pgm_a = 1;
   midi.pst_b = 2;
   midi.fader = 0;

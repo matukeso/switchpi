@@ -15,12 +15,12 @@ int open232c( const char *name ){
   if( fd > 0 ) {
     struct termios tio;
     tcgetattr(fd, &tio);
-    cfsetspeed(&tio, B9600);
     tio.c_iflag = IGNBRK | IGNPAR | IXON ;
     tio.c_oflag = 0;
     tio.c_cflag = CS8 | CREAD | CLOCAL ;
     tio.c_lflag = 0;
     
+    cfsetspeed(&tio, B9600);
     tcflush(fd, TCIFLUSH);
     tcsetattr(fd, TCSANOW, &tio);
   }
