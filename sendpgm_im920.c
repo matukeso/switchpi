@@ -15,9 +15,12 @@ static void send_pgm(int gpfd, struct model *m)
   int pst_bit = m->pst_b == 0 ? 0 : 1<<(m->pst_b-1);
   
   char buf[32];
-  int len = sprintf(buf, "TXDT 0%x00\r\n", pgm_bit | pst_bit );
+  int len = sprintf(buf, "TXDT %02x00\r\n", pgm_bit | pst_bit );
   write( gpfd, buf, len );
 
+  //  printf("%d, %d => %s",m->pgm_a, m->pst_b, buf );
+
+  
   char rbuf[4];
   read( gpfd, rbuf, 4 );
   

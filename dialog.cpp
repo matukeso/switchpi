@@ -109,7 +109,7 @@ void Dialog::OnUpdateUI()
     ui->label->setText(maintxt);
   }
 
-  QLabel *labels[] = { ui->label_1, ui->label_2, ui->label_3, ui->label_4 };
+  QLabel *labels[] = { ui->label_1, ui->label_2, ui->label_3, ui->label_4, ui->label_5, ui->label_6 };
 
   QLabel *actlabel[2] = { nullptr, nullptr};
   switch( midi.pgm_a ){
@@ -117,6 +117,8 @@ void Dialog::OnUpdateUI()
   case 2: actlabel[0] =  ui->label_2; break;
   case 3: actlabel[0] =  ui->label_3; break;
   case 4: actlabel[0] =  ui->label_4; break;
+  case 5: actlabel[0] =  ui->label_5; break;
+  case 6: actlabel[0] =  ui->label_6; break;
   }
   if( midi.fader != 127 ){
     switch( midi.pst_b ){
@@ -124,11 +126,13 @@ void Dialog::OnUpdateUI()
     case 2: actlabel[1] =  ui->label_2; break;
     case 3: actlabel[1] =  ui->label_3; break;
     case 4: actlabel[1] =  ui->label_4; break;
+    case 5: actlabel[1] =  ui->label_5; break;
+    case 6: actlabel[1] =  ui->label_6; break;
   }
   }
   if( ui->label ){
-    for( int i=0; i<4; i++){
-      QLabel *l  = labels[i];
+    for( QLabel *l : labels )
+    {
       QPalette palette = l->palette();
       if( l == actlabel[0] || l == actlabel[1] ){
         palette.setColor( QPalette::Window, "#ff0000");

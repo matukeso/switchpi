@@ -98,7 +98,8 @@ static void proc_command( int fd, int fdlog )
     {
       struct oc_state oc = read_oc_state(fd);
 
-     extract_oc_state( &oc, &midi.pgm_a, &midi.pst_b );
+      extract_oc_state( &oc, &midi.pgm_a, &midi.pst_b );
+      //      printf("%d %d\n", midi.pgm_a, midi.pst_b );
 
       if( midi.pst_b == 0 ){
 	midi.start_fader = midi.pgm_a;
