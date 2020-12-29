@@ -28,7 +28,8 @@ SOURCES += main.cpp\
     tcser.c \
     switch232c.c \
     switchmidi.c \
-    sendpgm.c
+    sendpgm_audio.c\
+    sendpgm_im920.c
 
 HEADERS  += dialog.h \
     switch.h
