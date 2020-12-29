@@ -50,7 +50,7 @@ void disp()
 
 
 
-int can_read(int fd )
+static int can_read(int fd )
 {
   struct timeval tv = {0,0};
   fd_set rfds;
@@ -64,8 +64,8 @@ int can_read(int fd )
 }
 
 
-int a_or_b = 0;
-int fading = 0;
+static int a_or_b = 0;
+static int fading = 0;
 volatile int g_fd;
 
 void doOutputTclog(int fdlog)
@@ -182,7 +182,7 @@ void init_midi(int fd)
 int midiloop(int fd, int fdlog)
 {
   init_midi(fd);
-  while(1){
+while(fd > 1){
     proc_command( fd, fdlog );    
   }
 }

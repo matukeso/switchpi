@@ -25,8 +25,9 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += main.cpp\
         dialog.cpp \
-    switch232c.c \
     tcser.c \
+    switch232c.c \
+    switchmidi.c \
     sendpgm.c
 
 HEADERS  += dialog.h \

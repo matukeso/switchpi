@@ -52,7 +52,7 @@ static void disp()
 
 
 
-int can_read(int fd )
+static int can_read(int fd )
 {
   struct timeval tv = {1,0};
   fd_set rfds;
@@ -66,8 +66,8 @@ int can_read(int fd )
 }
 
 
-int a_or_b = 0;
-int fading = 0;
+static int a_or_b = 0;
+static int fading = 0;
 volatile int g_fd;
 
 static void doOutputTclog(int fdlog)
