@@ -40,6 +40,8 @@ void *run_sendpgm( void *arg)
 
 
 int g_gpfd;
+volatile int g_fd;
+struct model midi;
 
 int main(int argc, char *argv[])
 {

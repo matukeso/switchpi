@@ -68,7 +68,6 @@ static int can_read(int fd )
 
 static int a_or_b = 0;
 static int fading = 0;
-volatile int g_fd;
 
 static void doOutputTclog(int fdlog)
 {
