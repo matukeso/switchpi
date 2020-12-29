@@ -15,6 +15,11 @@ public:
     explicit Dialog(QWidget *parent = 0);
     ~Dialog();
 
+  void evf_keyPressEvent( QKeyEvent*);
+  bool check_input_start();
+  bool check_reboot_req();
+			 
+  bool eventFilter( QObject*o, QEvent *e);
 public slots:
   void OnUpdateUI();
     
