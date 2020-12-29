@@ -41,6 +41,7 @@ int main(int argc, char *argv[])
   int gpfd = pigpio_start(NULL,NULL);
   if( gpfd < 0 )
     return 99;
+  printf("gpfd = %d\n", gpfd );
 
   g_gpfd = gpfd;
 

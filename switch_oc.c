@@ -81,7 +81,7 @@ static void extract_oc_state( const struct oc_state *s, int *p1, int *p2){
 	*p1 = i+1;
 	mode++;
       }
-      if( mode ==1 ){
+      else if( mode ==1 ){
 	*p2 = i+1;
 	mode++;
       }
@@ -128,7 +128,7 @@ static void proc_command( int fd, int fdlog )
 void init_oc(int fd)
 {
 
-  printf("init open-collector\n");
+  printf("init open-collector %d\n", fd);
   midi.pgm_a = 1;
   midi.pst_b = 2;
   midi.fader = 0;
@@ -145,7 +145,7 @@ void init_oc(int fd)
 int ocloop(int fd, int fdlog)
 {
   init_oc(fd);
-  while(fd > 1){
+  while(fd >=0){
     proc_command( fd, fdlog );    
   }
   return 0;
