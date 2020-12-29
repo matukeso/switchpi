@@ -3,20 +3,12 @@
 
 #include <pigpiod_if2.h>
 
-extern "C" int midiloop(int fd, int fdlog);
-extern "C" int tcserloop(int fd);
+#include "switch.h"
 
-extern "C" int sendpgm_loop(int gpfd);
-
-struct midiarg
-{
-  int fd_midi;
-  int fd_log;
-}  ;
 void *run_midi(void *arg)
 {
   struct midiarg *marg = (struct midiarg*)arg;
-  midiloop( marg->fd_midi, marg->fd_log);
+  ocloop( marg->fd_midi, marg->fd_log);
   return NULL;
 }
 
@@ -51,29 +43,32 @@ int main(int argc, char *argv[])
     return 99;
 
   g_gpfd = gpfd;
-  
-  struct midiarg marg = {0, 0};
 
-  marg.fd_midi = open( "/dev/midi1", O_RDWR);
-  printf("openmidi %d\n", marg.fd_midi);
-
-
-  if( argc > 1 ){
-    marg.fd_log = open( "all.log", O_RDWR | O_APPEND, 0600);
-    printf("open(%s) %d\n", argv[1], marg.fd_log);
+  if( 0  ){
+    struct midiarg marg = {0, 0};
+    
+    marg.fd_midi = gpfd;    
+    
+    if( argc > 1 ){
+      marg.fd_log = open( "all.log", O_RDWR | O_APPEND, 0600);
+      printf("open(%s) %d\n", argv[1], marg.fd_log);
+    }
+    
+    pthread_t thmidi;
+    pthread_create( &thmidi, NULL, run_midi, (void*)&marg );
   }
   
-
-
-  pthread_t thmidi;
-  pthread_create( &thmidi, NULL, run_midi, (void*)&marg );
 
   pthread_t th_tcser;
   pthread_create( &th_tcser, NULL, run_tcser, (void*)gpfd );
 
-  pthread_t th_sendpgm;
-  pthread_create( &th_sendpgm, NULL, run_sendpgm, (void*)gpfd );
-
+  {
+    int fd = open232c( "/dev/ttyUSB0");
+    
+    
+    pthread_t th_sendpgm;
+    pthread_create( &th_sendpgm, NULL, run_sendpgm, (void*)fd );
+  }
   
     QApplication a(argc, argv);
     Dialog w;
