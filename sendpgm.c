@@ -74,4 +74,9 @@ int sendpgm_loop(int gpfd)
   pigpio_stop(gpfd);
 }
 
-
+#ifdef SINGLE
+int main()
+{
+  sendpgm_loop();
+}
+#endif
