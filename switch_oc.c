@@ -27,6 +27,7 @@ static void disp()
   //  printf("<%d, %d, %d>\n", midi.pgm_a, midi.pst_b, midi.fader );
 }
 
+extern void output_csv( const char *msg, int byte );
 
 static void doOutputTclog(int fdlog)
 {
@@ -44,10 +45,8 @@ static void doOutputTclog(int fdlog)
   if( fdlog > 0 ) {
     write(fdlog, buf, len );
   }
-  int fd = g_fd;
-  if( fd > 0 ){
-    write(fd, buf, len );
-  }
+  
+  output_csv( buf, len  );
 }
 
 

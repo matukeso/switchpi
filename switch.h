@@ -11,7 +11,6 @@ extern "C" {
 #endif /* __cplusplus */
 
 extern struct model midi;
-extern volatile int g_fd;
 extern int current_tc();
 
  int loop_switch232c(int fd, int fdlog);

@@ -66,7 +66,8 @@ static int can_read(int fd )
 
 static int a_or_b = 0;
 static int fading = 0;
-volatile int g_fd;
+
+extern void output_csv( const char *msg, int byte );
 
 void doOutputTclog(int fdlog)
 {
@@ -84,10 +85,7 @@ void doOutputTclog(int fdlog)
   if( fdlog > 0 ) {
     write(fdlog, buf, len );
   }
-  int fd = g_fd;
-  if( fd > 0 ){
-    write(fd, buf, len );
-  }
+  output_csv( buf, len );
 }
 
 

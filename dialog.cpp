@@ -5,6 +5,9 @@
 #include <QKeyEvent>
 extern int g_gpfd;
 
+static int g_fd = -1;
+static char  g_firstlog[256]="";
+int g_firstlen = 0;
 
 static const int GPIO_INPUTBUTTON = 17;
 static const int GPIO_SHUTDOWN = 27;
@@ -158,11 +161,13 @@ void Dialog::OnUpdateUI()
 void Dialog::on_pushButton_clicked()
 {
   if( g_fd > 0 ){
+    printf("CLOSE\n");
     int fd = g_fd;
     g_fd = 0;
     ::close(fd);
   }
   else{
+    printf("OPEN\n");
     QDir mount("/media/pi");
     mount.setFilter(QDir::AllDirs | QDir::NoDotAndDotDot);
     QStringList list = mount.entryList();
@@ -185,7 +190,18 @@ void Dialog::on_pushButton_clicked()
 
       int fdw = ::open( path.toUtf8().constData(), O_RDWR | O_CREAT, 0600);
       if( fdw > 0 ){
+	char tc[12];
+	sprintf(tc, "%08d", current_tc() );
+	char buf[64];
+	int len  =    sprintf(buf, "%c%c:%c%c:%c%c.%c%c",
+			      tc[0],tc[1],tc[2],tc[3],tc[4],tc[5],tc[6],tc[7]);
+	memcpy( g_firstlog, buf, len );
+			      
+
+	::write(fdw, g_firstlog, g_firstlen );
         g_fd = fdw;
+
+	
         ui->label_path->setText(path);
       }
       else{
@@ -193,4 +209,14 @@ void Dialog::on_pushButton_clicked()
       }
     }
   }
+}
+
+extern "C" void output_csv( const char *msg, int bytes )
+{
+  int fd = g_fd;
+  if( fd > 0 ) {
+    ::write( fd, msg, bytes);
+  }
+  memcpy( g_firstlog, msg, bytes );
+  g_firstlen   = bytes;
 }
