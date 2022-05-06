@@ -69,7 +69,7 @@ int current_tc() {
 
 
 
-static const int SerialFromArduino = 26; //pin 37
+static const int SerialFromArduino = 5; //pin 37
 
 int  tcserloop(int gpfd)
 {
