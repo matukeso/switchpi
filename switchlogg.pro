@@ -28,7 +28,8 @@ SOURCES += main.cpp\
         tcser.c \
         switchlib.c \
         switch_oc.c \
-    sendpgm_im920.c
+        sendpgm_im920.c \
+        mountutil.cpp
 
 #    sendpgm_audio.c\
 #    switch232c.c \

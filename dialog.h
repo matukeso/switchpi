@@ -17,6 +17,7 @@ public:
 
   void evf_keyPressEvent( QKeyEvent*);
   bool check_input_start();
+  bool check_input_umount();
   bool check_reboot_req();
 			 
   bool eventFilter( QObject*o, QEvent *e);

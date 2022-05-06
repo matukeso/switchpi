@@ -3,6 +3,8 @@
 #include <pigpiod_if2.h>
 #include <qprocess.h>
 #include <QKeyEvent>
+
+#include <unistd.h>
 extern int g_gpfd;
 
 static int g_fd = -1;
@@ -10,6 +12,8 @@ static char  g_firstlog[256]="";
 int g_firstlen = 0;
 
 static const int GPIO_INPUTBUTTON = 17;
+static const int GPIO_INPUTBUTTON_2 = 22;
+static const int GPIO_INPUTBUTTON_3 = 23;
 static const int GPIO_SHUTDOWN = 27;
 
 Dialog::Dialog(QWidget *parent) :
@@ -26,6 +30,8 @@ Dialog::Dialog(QWidget *parent) :
 
     set_mode( g_gpfd, GPIO_INPUTBUTTON, PI_INPUT );
     set_pull_up_down( g_gpfd, GPIO_INPUTBUTTON, PI_PUD_UP);
+    set_mode( g_gpfd, GPIO_INPUTBUTTON_2, PI_INPUT );
+    set_pull_up_down( g_gpfd, GPIO_INPUTBUTTON_2, PI_PUD_UP);
     set_mode( g_gpfd, GPIO_SHUTDOWN, PI_INPUT);
     set_pull_up_down( g_gpfd, GPIO_SHUTDOWN, PI_PUD_UP);
 }
@@ -80,6 +86,16 @@ bool Dialog::check_input_start(){
   g_prev_gpio = gpio;
   return ret;
 }
+bool Dialog::check_input_umount(){
+  static int g_prev_gpio2;
+  bool ret = false;
+  int gpio = !gpio_read( g_gpfd, GPIO_INPUTBUTTON_2 );
+  if( gpio == 1  && g_prev_gpio2 == 0 ){
+    ret =  true;
+  }
+  g_prev_gpio2 = gpio;
+  return ret;
+}
 bool Dialog::check_reboot_req(){
   static int g_prev_gpio;
   bool ret = false;
@@ -91,15 +107,45 @@ bool Dialog::check_reboot_req(){
   return ret;
 }
 
+QString get_mount_dir();
+bool has_mount_dir();
+bool umount_dir();
+int open_mounted_log(QString &path);
+
+bool  ensure_close_gfd()
+{
+  if( g_fd > 0 ){
+    printf("CLOSE\n");
+    int fd = g_fd;
+    g_fd = 0;
+    ::close(fd);
+    return true;
+  }
+  return false;
+}
+
+
 void Dialog::OnUpdateUI()
 {
   check_input_start();
+  const bool has_usbstick = has_mount_dir();
+  QString maintxt =
+    ( g_fd > 0   ) ? QString::fromUtf8("●保存中：") :
+    (has_usbstick) ? QString::fromUtf8("□待機中：") :
+                     QString::fromUtf8("×待機中：") ;
+
+  if( has_usbstick ){
+    if( check_input_umount() ){
+      ensure_close_gfd();
+      umount_dir();
+    }
+  }
+  
   if( check_reboot_req() ){
     QProcess::execute("sudo poweroff");
     QApplication::quit();
   }
 
-  QString maintxt = ( g_fd > 0 ) ? QString::fromUtf8("●保存中：") : QString::fromUtf8("×待機中：");
 
   {
     char t[10];
@@ -151,65 +197,46 @@ void Dialog::OnUpdateUI()
 
 }
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-
-#include <QDir>
 
 void Dialog::on_pushButton_clicked()
 {
-  if( g_fd > 0 ){
-    printf("CLOSE\n");
-    int fd = g_fd;
-    g_fd = 0;
-    ::close(fd);
+  if( ensure_close_gfd() ){
+    ;
   }
   else{
-    printf("OPEN\n");
-    QDir mount("/media/pi");
-    mount.setFilter(QDir::AllDirs | QDir::NoDotAndDotDot);
-    QStringList list = mount.entryList();
-    if( list.size() == 0 ){
+    printf("OPEN func\n");
+
+    if(!has_mount_dir()){
       ui->label_path->setText("NO-USB-DRIVE");
+      printf("NO USB\n");
     }
     else{
-      QString usb_drive =  mount.absoluteFilePath( list[0] );
       QString path;
-      {
-        time_t now;
-        time(&now);
-        char buf[64];
-        strftime(buf, sizeof buf, "%Y%m%dT%H%M%S", localtime(&now));
-        path = usb_drive;
-        path += "/";
-        path += buf;
-        path += ".log";
+      int fdw = open_mounted_log(path);
+      if(fdw < 0 ){
+	ui->label_path->setText("ERR-USB-DRIVE");
+	printf("ERR\n");
+	return ;
       }
-
-      int fdw = ::open( path.toUtf8().constData(), O_RDWR | O_CREAT, 0600);
-      if( fdw > 0 ){
+      else{
 	char tc[12];
 	sprintf(tc, "%08d", current_tc() );
 	char buf[64];
 	int len  =    sprintf(buf, "%c%c:%c%c:%c%c.%c%c",
 			      tc[0],tc[1],tc[2],tc[3],tc[4],tc[5],tc[6],tc[7]);
 	memcpy( g_firstlog, buf, len );
-			      
+
 
 	::write(fdw, g_firstlog, g_firstlen );
-        g_fd = fdw;
+	g_fd = fdw;
 
-	
-        ui->label_path->setText(path);
-      }
-      else{
-        ui->label_path->setText("ERROR:" + path);
+
+	ui->label_path->setText(path);
       }
     }
   }
 }
+
 
 extern "C" void output_csv( const char *msg, int bytes )
 {
