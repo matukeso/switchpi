@@ -26,7 +26,8 @@ bool has_mount_dir()
 }
 bool umount_dir(){
   QString list = get_mount_dir();
-  QString cmd = QString(  "sudo umount \"%1\"" ).arg(list);
+  //  QString cmd = QString(  "sudo umount \"%1\"" ).arg(list);
+  QString cmd = QString(  "gio mount -e \"%1\"" ).arg(list);
   printf("%s\n", qPrintable(cmd) ) ;
   QProcess::execute(cmd);
 
