@@ -93,24 +93,17 @@ static int  bi = 0;
 
 static void ParseCmd(const char *cmd, int fdlog ){
   int qv = midi.fader;
-  int fad;
   int pgm;
   int pst;
-  int btn[4];
   
   //   printf(">%s\n", cmd );
   int addr = 0;
   if( sscanf( cmd, "DTH:%x,%02x%02x%04x;", &addr, &pgm, &pst, &qv )
 	       == 4 ){
 //     printf(">%s\t", cmd );
-    if( 0&&qv == 0 ){
-      // transit-complete notification may wrong.
-      // ex. <1,2,255> -> <1,2,128(dn)> -> <1,2,3> -> <2,1,0>
-      // this should <1,2,0> or <2,1,255>
-      qv = 255;
-    }
+    if( qv == 0 ) qv = 127*32;
     qv/=32; // 232c(0..255) to midi(0..127)
-//#    printf("%s PGM:%d, PST:%d, Fout:%d\n",cmd, pgm, pst, qv);
+//printf("%s PGM:%d, PST:%d, Fout:%d\n",cmd, pgm, pst, qv);
     midi.pgm_a = pgm - 31;
     midi.pst_b = pst - 31;
     midi.fader = qv;
@@ -177,6 +170,8 @@ static void proc_command( int fd, int fdlog )
       continue;
     }
     if( cmd == ACK ){
+      send_ack = 0;
+      continue;
     }
 
     buf[bi++] = cmd;
