@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 
 #include <unistd.h>
 #include <sys/types.h>
@@ -26,7 +27,9 @@ static const char QueryFader[] = "\2QPL:7;";
 static const char QueryAll  [] = "\2QPL:8;";
 static const long long timeout_ack = 1*1000000000LL;
 
-
+static const char v60QueryFader[] = "\2QPL:6;";
+static const char v60QueryAll  [] = "\2QPL:7;";
+static int v60mode = 0;
 
 static int getbyte( int fd )
 {
@@ -87,26 +90,57 @@ static char prod[64];
 static char buf[256];
 static int  bi = 0;
 
+static int conv_fader( int qv_raw )
+{
+int qv = 0;
+    if( v60mode ){
+    if( qv_raw == 0 ){
+      // transit-complete notification may wrong.
+      // ex. <1,2,255> -> <1,2,128(dn)> -> <1,2,3> -> <2,1,0>
+      // this should <1,2,0> or <2,1,255>
+      qv = 127;
+    }else{
+    qv=qv_raw/16; // 232c(0..255) to midi(0..127)
+    }
+    }
+    else{
+    //   printf(">%s\t", cmd );
+    if( qv_raw == 0 ){
+      // transit-complete notification may wrong.
+      // ex. <1,2,255> -> <1,2,128(dn)> -> <1,2,3> -> <2,1,0>
+      // this should <1,2,0> or <2,1,255>
+      qv = 127;
+    }else{
+    qv= qv_raw/2; // 232c(0..255) to midi(0..127)
+    }
+  }
+    return qv;
+}
+
 static void ParseCmd(const char *cmd, int fdlog ){
-  int qv = midi.fader;
+  int qv_raw;
   int fad;
   int pgm;
   int pst;
   int btn[4];
   
+  int qplcmd=0;
   //   printf(">%s\n", cmd );
-  if( sscanf( cmd, "QPL:%d,%d,%d,%d,%d,%d,%d,%d;",
+  if( v60mode ){
+  qplcmd =  sscanf( cmd, "QPL:%d,%d,%d,%d,%d,%d,%d;",
 	      &pgm, &pst, &btn[0], &btn[1], &btn[2], &btn[3],
-	      &fad, &qv) == 8 ){
+	      &qv_raw) == 7 ;
     //   printf(">%s\t", cmd );
-    if( qv == 0 ){
-      // transit-complete notification may wrong.
-      // ex. <1,2,255> -> <1,2,128(dn)> -> <1,2,3> -> <2,1,0>
-      // this should <1,2,0> or <2,1,255>
-      qv = 255;
-    }
-    qv/=2; // 232c(0..255) to midi(0..127)
-    //  printf("PGM:%d, PST:%d, Fout:%d\n", pgm, pst, qv);
+  }
+  else {
+	  qplcmd  = sscanf( cmd, "QPL:%d,%d,%d,%d,%d,%d,%d,%d;",
+	      &pgm, &pst, &btn[0], &btn[1], &btn[2], &btn[3],
+	      &fad, &qv_raw) == 8 ;
+  }
+  if( qplcmd )
+  {
+    int qv = conv_fader( qv_raw );
+   // printf("PGM:%d, PST:%d, Fout:%d(%d)\n", pgm, pst, qv, qv_raw);
     midi.pgm_a = pgm + 1;
     midi.pst_b = pst + 1;
     midi.fader = qv;
@@ -115,11 +149,12 @@ static void ParseCmd(const char *cmd, int fdlog ){
     doOutputTclog( fdlog );
     return ;
   }
-  if( sscanf( cmd, "QPL:%d;", &qv ) == 1 ){
-    qv/=2; // 232c(0..255) to midi(0..127)
+  if( sscanf( cmd, "QPL:%d;", &qv_raw ) == 1 ){
+    int qv = conv_fader( qv_raw );
+
     if( qv != midi.fader ){
 #ifdef SINGLE
-      printf("f:%d\n", qv );
+      printf("f:%d (%d)\n", qv,qv_raw );
 #endif
       midi.fader = qv;
     }
@@ -127,7 +162,8 @@ static void ParseCmd(const char *cmd, int fdlog ){
     return ;
   }
   if( sscanf( cmd, "VER:%[^;];", prod) == 1 ){
-	printf("'%s'\n", prod);
+	v60mode = memcmp(prod,"V-60HD",6) == 0;
+  	  printf("'%s' mode=%d\n", prod, v60mode);
 	  return ;
  }
 }
@@ -153,7 +189,13 @@ static void proc_command( int fd, int fdlog )
   
   if( send_ack == 0 ){
     if( cmd_len == 0 ){
+	if( v60mode ){
+
+        write(fd, v60QueryFader, sizeof(v60QueryFader) - 1);
+	}else{
         write(fd, QueryFader, sizeof(QueryFader) - 1);
+	
+	}
 	send_ack = now;
     }else{
         write(fd, cmd_queue, cmd_len);
@@ -235,11 +277,15 @@ static void init_232(int fd)
     tio.c_oflag = 0;
     tio.c_cflag = B9600 | CS8 | CREAD | CLOCAL ;
     tio.c_lflag = 0;
-    
     tcflush(fd, TCIFLUSH);
     tcsetattr(fd, TCSANOW, &tio);
   }
-  write(fd, QueryAll, sizeof(QueryAll) - 1);
+  if( v60mode ){
+  	write(fd, v60QueryAll, sizeof(v60QueryAll) - 1);
+  }else{
+  	write(fd, QueryAll, sizeof(QueryAll) - 1);
+	}
+  
   send_ack = nanosec_now();
   //  printf("INIT\n");
 }
