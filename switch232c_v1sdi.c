@@ -123,6 +123,7 @@ static void ParseCmd(const char *cmd, int fdlog ){
 #endif
       midi.fader = qv;
     }
+    midi.tick = nanosec_now();
     return ;
   }
   if( sscanf( cmd, "VER:%[^;];", prod) == 1 ){
@@ -159,8 +160,6 @@ static void proc_command( int fd, int fdlog )
 	send_ack = now;
 	cmd_len = 0;
     }
-	//        printf("Q");
-     return ;
   }
 
   if( send_ack > 0 && now - send_ack > timeout_ack ){
@@ -169,12 +168,13 @@ static void proc_command( int fd, int fdlog )
     return ;
   }
 
+reread:
   if( !can_read(fd) )
     return ;
   while( 1 ){ 
     int cmd = getbyte(fd);
     if( cmd < 0)
-      return ;
+      goto reread;
 
     // STX. clear buffer.
     if( cmd == STX ){
@@ -214,6 +214,7 @@ extern int check_v1sd1( int fd, int fdlog )
  prod[0] = 0;
  cmd_len = sprintf(cmd_queue, "\2VER;");
  proc_command(fd, -1);
+ send_ack =0;
  return prod[0] != 0;
 }
 

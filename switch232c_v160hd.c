@@ -156,12 +156,13 @@ static void proc_command( int fd, int fdlog )
     return ;
   }
 
+reread:
   if( !can_read(fd) )
     return ;
   while( 1 ){ 
     int cmd = getbyte(fd);
     if( cmd < 0)
-      return ;
+      goto reread;
 
     // STX. clear buffer.
     if( cmd == STX ){
