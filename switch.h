@@ -15,9 +15,12 @@ extern struct model midi;
 extern int current_tc();
 
  int loop_switch232c(int fd, int fdlog);
- int open232c( const char *name );
 
-  int ocloop(int fd, int fdlog);
+ const char *ttyUSB(int i);
+ int open232c( const char *name );
+ int openusb232c( int i );
+ 
+ int ocloop(int fd, int fdlog);
 
  int midiloop(int fd, int fdlog);
  int tcserloop(int fd);
