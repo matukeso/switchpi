@@ -16,11 +16,14 @@ void *run_midi(void *arg)
 
     int fd = openusb232c( ttyUSB_for_midi);
     struct midiarg *marg = (struct midiarg*)arg;
- 
-    printf("main midi port = ttyUSB%d. (%d, %d)\n",ttyUSB_for_midi, fd, errno); 
-    loop_switch232c( fd, marg->fd_log );
- //   ocloop( marg->fd_midi, marg->fd_log);
-  return NULL;
+   if( fd >= 0 ){ 
+     printf("main midi port = ttyUSB%d. (%d)\n",ttyUSB_for_midi, fd ); 
+     loop_switch232c( fd, marg->fd_log );
+   }else{
+     printf("main midi port = OC8(%d)\n", marg->fd_midi); 
+       ocloop( marg->fd_midi, marg->fd_log);
+   }
+   return NULL;
 }
 
 void *run_tcser( void *arg)
