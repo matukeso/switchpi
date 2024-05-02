@@ -13,12 +13,6 @@ int dateDfToFrame(int hhmmssff[]);
 const int *DfFrameToDate(int f);
 
 
-inline static long long nanosec_now(){
-  struct timespec ts = {};
-  clock_gettime(  CLOCK_REALTIME, &ts );
-  return  (ts.tv_sec * 1000000000LL) + ts.tv_nsec;
-
-}
 
 volatile int bcd_tc;
 volatile long long recv_nanosec;

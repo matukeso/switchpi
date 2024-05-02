@@ -105,20 +105,24 @@ static void proc_command(int fd, int fdlog)
 
 //OCには順序がないので、2bit立っているとPGN/PSTの区別ができない。
 //1bitのみであればPGM_aなので、覚えておく。
-    if (midi.pst_b == 0)
-    {
-      midi.start_fader = midi.pgm_a;
-      midi.fader = 0;
-    }
-    else
-    {
-      if (midi.pst_b == midi.start_fader)
-      {
-        swap(&midi.pgm_a, &midi.pst_b);
+      midi.tick = nanosec_now();
+      if( midi.pst_b == 0 ){
+	midi.start_fader = midi.pgm_a;
+	midi.fader = 0;
       }
+      else{
+	if( midi.pst_b == midi.start_fader ){
+	  swap( &midi.pgm_a, &midi.pst_b );
+	}
       //FADINGを装う。
-      midi.fader = 64;
-    }
+	midi.fader = 64;
+      }
+
+
+      if( 0 != memcmp( &prev_oc_state , &oc, sizeof(oc)) ){
+	    doOutputTclog( fdlog );
+      }
+      prev_oc_state = oc;
 
     if (0 != memcmp(&prev_oc_state, &oc, sizeof(oc)))
     {

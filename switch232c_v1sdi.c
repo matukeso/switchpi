@@ -26,12 +26,6 @@ static const char QueryFader[] = "\2QPL:7;";
 static const char QueryAll  [] = "\2QPL:8;";
 static const long long timeout_ack = 1*1000000000LL;
 
-static long long nanosec_now(){
-  struct timespec ts = {};
-  clock_gettime(  CLOCK_REALTIME, &ts );
-  return  (ts.tv_sec * 1000000000LL) + ts.tv_nsec;
-}
-
 
 
 static int getbyte( int fd )
@@ -66,8 +60,6 @@ static int can_read(int fd )
 }
 
 
-static int a_or_b = 0;
-static int fading = 0;
 
 extern void output_csv( const char *msg, int byte );
 
@@ -118,6 +110,7 @@ static void ParseCmd(const char *cmd, int fdlog ){
     midi.pgm_a = pgm + 1;
     midi.pst_b = pst + 1;
     midi.fader = qv;
+    midi.tick = nanosec_now();
     disp();
     doOutputTclog( fdlog );
     return ;
