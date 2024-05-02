@@ -25,21 +25,21 @@ static void send_pgm(int gpfd, struct model *m)
 
 int sendpgm_loop(int fd)
 {
-  printf("senepgm im920\n");
-  if (fd > 0)
-  {
-    struct termios tio;
-    tcgetattr(fd, &tio);
-    tio.c_iflag = IGNBRK | IGNPAR | IXON;
-    tio.c_oflag = 0;
-    tio.c_cflag = CS8 | CREAD | CLOCAL;
-    tio.c_lflag = 0;
-
-    cfsetspeed(&tio, B19200);
-    tcflush(fd, TCIFLUSH);
-    tcsetattr(fd, TCSANOW, &tio);
-  }
-  int timfd = timerfd_create(CLOCK_MONOTONIC, 0);
+  printf("sendpgm im920(%d)\n", fd);
+  if( fd > 0 )
+    {
+      struct termios tio;
+      tcgetattr(fd, &tio);
+      tio.c_iflag = IGNBRK | IGNPAR | IXON ;
+      tio.c_oflag = 0;
+      tio.c_cflag = CS8 | CREAD | CLOCAL ;
+      tio.c_lflag = 0;
+      
+      cfsetspeed(&tio, B19200);
+      tcflush(fd, TCIFLUSH);
+      tcsetattr(fd, TCSANOW, &tio);
+    }
+  int timfd = timerfd_create(   CLOCK_MONOTONIC, 0 );
 
   struct itimerspec ts = {};
   ts.it_interval.tv_sec = 0;
@@ -57,15 +57,6 @@ int sendpgm_loop(int fd)
   }
 }
 
-void send_232c_pgm(int ch)
-{
-}
-void send_232c_pst(int ch)
-{
-}
-void send_232c_ato()
-{
-}
 
 #ifdef SINGLE
 #include <unistd.h>

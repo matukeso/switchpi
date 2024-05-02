@@ -5,10 +5,21 @@
 
 #include "switch.h"
 
+static   int ttyUSB_for_send = -1;
+extern "C" int get_usb232_by_serial( const char *serial );
+extern "C" int loop_switch232c(int fd, int fdlog);
 void *run_midi(void *arg)
 {
-  struct midiarg *marg = (struct midiarg*)arg;
-  ocloop( marg->fd_midi, marg->fd_log);
+   int ttyUSB_for_midi = 0;
+   if( ttyUSB_for_send == 0 )
+	ttyUSB_for_midi = 1;
+
+    int fd = openusb232c( ttyUSB_for_midi);
+    struct midiarg *marg = (struct midiarg*)arg;
+ 
+    printf("main midi port = ttyUSB%d. (%d, %d)\n",ttyUSB_for_midi, fd, errno); 
+    loop_switch232c( fd, marg->fd_log );
+ //   ocloop( marg->fd_midi, marg->fd_log);
   return NULL;
 }
 
@@ -33,7 +44,6 @@ void *run_sendpgm( void *arg)
 
 int g_gpfd;
 volatile int g_fd;
-struct model midi;
 
 int main(int argc, char *argv[])
 {
@@ -44,6 +54,19 @@ int main(int argc, char *argv[])
   printf("gpfd = %d\n", gpfd );
 
   g_gpfd = gpfd;
+
+  pthread_t th_tcser;
+  pthread_create( &th_tcser, NULL, run_tcser, (void*)gpfd );
+
+  ttyUSB_for_send = get_usb232_by_serial("DN05J9A1");
+  if(ttyUSB_for_send >= 0 ){
+    int fd = openusb232c( ttyUSB_for_send );
+    printf("920MHz wireless enabled. port = ttyUSB%d, (%d)\n",ttyUSB_for_send, fd); 
+    
+    pthread_t th_sendpgm;
+    pthread_create( &th_sendpgm, NULL, run_sendpgm, (void*)fd );
+  }
+
 
   if( 1  ){
     struct midiarg marg = {0, 0};
