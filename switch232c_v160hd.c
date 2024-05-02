@@ -124,12 +124,13 @@ static char cmd_queue[64];
 static int cmd_len = 0;
 
 void send_232c_pgm_v160( int ch ){
-  cmd_len = sprintf(cmd_queue, "\2DTH:002100,%x;", ch+31);
+  cmd_len = sprintf(cmd_queue, "\2DTH:002100,%02x;", ch+31);
 }
 void send_232c_pst_v160( int ch ){
-  cmd_len = sprintf(cmd_queue, "\2DTH:002101,%x;", ch+31);
+  cmd_len = sprintf(cmd_queue, "\2DTH:002101,%02x;", ch+31);
 }
 void send_232c_ato_v160(){
+//  cmd_len = sprintf(cmd_queue, "\2DTH:002105,%02x;", 1);
 }
 
 
@@ -222,7 +223,6 @@ static void init_232(int fd)
 
 int loop_switch232c_v160(int fd, int fdlog)
 {
-if(	check_v160(fd, fdlog)== 0 ) return 0;
   init_232(fd);
   while(1){
     proc_command( fd, fdlog );    
