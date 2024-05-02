@@ -172,7 +172,7 @@ reread:
     }
     if( cmd == ACK ){
       send_ack = 0;
-      continue;
+      break;
     }
 
     buf[bi++] = cmd;
@@ -181,6 +181,7 @@ reread:
       buf[bi] = 0;
       ParseCmd(buf, fdlog);
       bi = 0;
+      break;
     }
   }
     

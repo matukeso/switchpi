@@ -169,8 +169,9 @@ static void proc_command( int fd, int fdlog )
   }
 
 reread:
-  if( !can_read(fd) )
+  if( !can_read(fd) ){
     return ;
+  }
   while( 1 ){ 
     int cmd = getbyte(fd);
     if( cmd < 0)
@@ -183,6 +184,7 @@ reread:
     }
     if( cmd == ACK ){
       send_ack = 0;
+      break;
     }
 
     buf[bi++] = cmd;
@@ -191,6 +193,7 @@ reread:
       buf[bi] = 0;
       ParseCmd(buf, fdlog);
       bi = 0;
+      break;
     }
   }
     
