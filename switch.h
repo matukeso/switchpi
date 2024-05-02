@@ -4,7 +4,7 @@ struct model {
   int pst_b;
   int fader;
   int start_fader;
-  long tick;
+  long long tick;
 };
 
 #ifdef __cplusplus

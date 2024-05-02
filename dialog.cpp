@@ -158,6 +158,12 @@ void Dialog::OnUpdateUI()
     ui->label->setText(maintxt);
   }
 
+  if(  nanosec_now() - midi.tick > 3e9 ){
+	midi.pgm_a = 0;
+	midi.pst_b = 0;
+  }
+
+
   QLabel *labels[] = { ui->label_1, ui->label_2, ui->label_3, ui->label_4, ui->label_5, ui->label_6 };
 
   QLabel *actlabel[2] = { nullptr, nullptr};
