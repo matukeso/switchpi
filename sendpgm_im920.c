@@ -12,6 +12,10 @@ static void send_pgm(int gpfd, struct model *m)
 {
   int pgm_bit = m->pgm_a == 0 ? 0 : 1 << (m->pgm_a - 1);
   int pst_bit = m->pst_b == 0 ? 0 : 1 << (m->pst_b - 1);
+  int pgm_bit = m->pgm_a == 0 ? 0 : 1<<(m->pgm_a-1);
+  int pst_bit = m->pst_b == 0 ? 0 : 1<<(m->pst_b-1);
+  if( m->fader == 127 || m->fader == 0) 
+	  pst_bit = 0;
 
   char buf[32];
   int len = sprintf(buf, "TXDT %02x00\r\n", pgm_bit | pst_bit);
