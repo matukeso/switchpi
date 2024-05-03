@@ -18,7 +18,9 @@ int current_tc();
 
 static void disp()
 {
+#ifdef SINGLE
   printf("<%d, %d, %d>\n", midi.pgm_a, midi.pst_b, midi.fader);
+#endif
 }
 
 
