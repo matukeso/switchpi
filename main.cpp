@@ -10,14 +10,17 @@ extern "C" int get_usb232_by_serial(const char *serial);
 extern "C" int loop_switch232c(int fd, int fdlog);
 extern "C" int init_bm_lan(const char *peer);
 extern "C" int bm_lan_loop(int fd, int fdlog);
-extern "C" extern void set_bm_mode();
+extern "C" void set_bm_mode();
+
 void *run_midi(void *arg)
 {
+  struct midiarg *marg = (struct midiarg *)arg;
+
   const char *bmip = "192.168.11.59";
   int bmfd = init_bm_lan(bmip);
   if(bmfd > 0){
     set_bm_mode();
-    printf("main midi port = blackmagick lan(%s) %d. (%d)\n", bmip, bmpfd);
+    printf("main midi port = blackmagick lan(%s) %d\n", bmip, bmfd);
     bm_lan_loop(bmfd, marg->fd_log);
     return NULL;
   }
@@ -27,7 +30,6 @@ void *run_midi(void *arg)
   if (ttyUSB_for_send == 0)
     ttyUSB_for_midi = 1;
   int fd = openusb232c(ttyUSB_for_midi);
-  struct midiarg *marg = (struct midiarg *)arg;
 
   if (fd >= 0)
   {

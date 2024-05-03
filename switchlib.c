@@ -24,7 +24,7 @@ int can_read_fd(int fd, int ms_timeout)
 }
 extern void output_csv(const char *msg, int byte);
 
-static void doOutputTclog(int fdlog)
+void doOutputTclog(int fdlog)
 {
 
   char tc[12];

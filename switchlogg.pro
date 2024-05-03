@@ -32,6 +32,7 @@ SOURCES += main.cpp\
     switch232c_autodetect.c \
     switch232c_v160hd.c \
     switch232c_v1sdi.c \
+    switch_blackmagik.c\
         sendpgm_im920.c \
         mountutil.cpp
 

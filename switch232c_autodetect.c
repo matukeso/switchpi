@@ -17,8 +17,8 @@ struct model midi;
 enum
 {
 	MODE_V160 = 160,
-	MODE_V1SD = 1
-	MODE_BLACKMAGIC = 111
+	MODE_V1SD = 1,
+	MODE_BLACKMAGIC = 111,
 };
 
 int controller_232c_mode = 0;
