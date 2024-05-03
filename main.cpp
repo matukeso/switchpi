@@ -4,6 +4,7 @@
 #include <pigpiod_if2.h>
 
 #include "switch.h"
+#include <unistd.h>
 
 static int ttyUSB_for_send = -1;
 extern "C" int get_usb232_by_serial(const char *serial);
@@ -19,10 +20,14 @@ void *run_midi(void *arg)
   const char *bmip = "192.168.11.59";
   int bmfd = init_bm_lan(bmip);
   if(bmfd > 0){
+    while(1){
     set_bm_mode();
     printf("main midi port = blackmagick lan(%s) %d\n", bmip, bmfd);
     bm_lan_loop(bmfd, marg->fd_log);
-    return NULL;
+    printf("reconnect\n"); 
+    close(bmfd);
+    bmfd = init_bm_lan(bmip);
+    }
   }
 
 
