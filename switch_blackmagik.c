@@ -62,7 +62,7 @@ void proc_line(const char *line)
   if (strcmp_findimm(line, "VIDEO OUTPUT ROUTING:"))
   {
     mode = 5;
-    midi.fader = 127;
+    midi.fader = 64;
     midi.tick = nanosec_now();
     return;
   }
