@@ -107,6 +107,7 @@ static int read_command(int fd)
   {
     if (errno == EWOULDBLOCK)
       return 0;
+    fprintf(stderr, "err %d", errno);
     return -10;
   }
   if (len == 0)
@@ -121,8 +122,7 @@ static int read_command(int fd)
 
 int init_bm_lan(const char *peer)
 {
-  int ret = 1;
-  printf("init bm-lan %s\n", peer);
+  printf("try init bm-lan %s\n", peer);
   static const struct addrinfo ai_help = {AI_NUMERICSERV | AI_NUMERICHOST, PF_UNSPEC, SOCK_STREAM};
   struct addrinfo *ai_r = 0;
   getaddrinfo(peer, "9990", &ai_help, &ai_r);
@@ -132,15 +132,15 @@ int init_bm_lan(const char *peer)
   if (sock < 0)
   {
     fprintf(stderr, "cant create socket %d\n", errno);
-    ret = -1;
   }
 
-  if (ret > 0)
+  if (sock >= 0)
   {
     if (connect(sock, ai->ai_addr, ai->ai_addrlen) < 0)
     {
       fprintf(stderr, "cant connect %d\n", errno);
-      ret = -2;
+      close( sock );
+      sock = -2;
     }
   }
   if (ai_r)
@@ -148,11 +148,12 @@ int init_bm_lan(const char *peer)
     freeaddrinfo(ai_r);
   }
 
-  u_long Enabled = 1;
-  ioctl(sock, FIONBIO, &Enabled);
-  tick_ping = nanosec_now();
-  read_command(sock);
-
+  if( sock >= 0 ){
+   u_long Enabled = 1;
+   ioctl(sock, FIONBIO, &Enabled);
+   tick_ping = nanosec_now();
+   read_command(sock);
+  }
   return sock;
 }
 static int proc_command(int fd, int fdlog)
@@ -194,8 +195,9 @@ int bm_lan_loop(int fd, int fdlog)
 {
   while (fd >= 0)
   {
-    if (proc_command(fd, fdlog) < 0)
+    if (proc_command(fd, fdlog) < 0){
       break;
+    }
   }
   return 0;
 }
