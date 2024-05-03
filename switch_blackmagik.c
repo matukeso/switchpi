@@ -49,6 +49,7 @@ void proc_line(const char *line)
   printf("L:%s\n", line);
   if (strcmp_findimm(line, "ACK"))
   {
+    midi.tick = nanosec_now();
     send_ack = 0;
   }
   if (line[0] == 0)
@@ -160,7 +161,7 @@ static int proc_command(int fd, int fdlog)
   {
     if (cmd_len == 0)
     {
-      if (now - tick_ping > 10 * 1000000000LL)
+      if (now - tick_ping > 1 * 1000000000LL)
       {
         tick_ping = now;
         write(fd, PING, sizeof(PING) - 1);
