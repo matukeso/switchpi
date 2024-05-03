@@ -17,189 +17,189 @@ static const char ACK = 0x06;
 
 extern int current_tc();
 
-
 extern struct model midi;
 
 static long long send_ack = 0;
 
 static const char QueryAll[] = "\2RQH:002100,000004;";
-//static const char QueryFader[] = "\2RQH:002102,000002;";
+// static const char QueryFader[] = "\2RQH:002102,000002;";
 #define QueryFader QueryAll
-static const long long timeout_ack = 1*1000000000LL;
+static const long long timeout_ack = 1 * 1000000000LL;
 
-
-
-
-static int getbyte( int fd )
+static int getbyte(int fd)
 {
-    unsigned char ch = 0;
-    if( read( fd, &ch, 1 ) != 1) return -1;
-    return ch;  
+  unsigned char ch = 0;
+  if (read(fd, &ch, 1) != 1)
+    return -1;
+  return ch;
 }
-
-
 
 static void disp()
 {
 #ifdef SINGLE
-    printf("<%d, %d, %d>\n", midi.pgm_a, midi.pst_b, midi.fader );
+  printf("<%d, %d, %d>\n", midi.pgm_a, midi.pst_b, midi.fader);
 #endif
 }
 
-
-
-static int can_read(int fd )
+static int can_read(int fd)
 {
-  struct timeval tv = {1,0};
+  struct timeval tv = {1, 0};
   fd_set rfds;
-  FD_ZERO( &rfds );
-  FD_SET(fd, &rfds );
-  int r = select( fd+1, &rfds, NULL, NULL, &tv );
+  FD_ZERO(&rfds);
+  FD_SET(fd, &rfds);
+  int r = select(fd + 1, &rfds, NULL, NULL, &tv);
   if (r > 0)
     return 1;
   else
     return 0;
 }
 
-
-
-extern void output_csv( const char *msg, int byte );
-
+extern void output_csv(const char *msg, int byte);
 
 static void doOutputTclog(int fdlog)
 {
 #ifdef SINGLE
-	return ;
+  return;
 #endif
-    char tc[12];
-    sprintf(tc, "%08d", current_tc() );
-    
-    
+  char tc[12];
+  sprintf(tc, "%08d", current_tc());
 
-    char buf[512];
-    
-    int len  =    sprintf(buf, "%c%c:%c%c:%c%c.%c%c QPL:%d,%d\n",
-			  tc[0],tc[1],tc[2],tc[3],tc[4],tc[5],tc[6],tc[7],
-			  midi.pgm_a-1, midi.pst_b-1);
-  if( fdlog > 0 ) {
-    write(fdlog, buf, len );
+  char buf[512];
+
+  int len = sprintf(buf, "%c%c:%c%c:%c%c.%c%c QPL:%d,%d\n",
+                    tc[0], tc[1], tc[2], tc[3], tc[4], tc[5], tc[6], tc[7],
+                    midi.pgm_a - 1, midi.pst_b - 1);
+  if (fdlog > 0)
+  {
+    write(fdlog, buf, len);
   }
-  output_csv( buf, len );
+  output_csv(buf, len);
 }
 
 static char prod[128];
 static char buf[256];
-static int  bi = 0;
+static int bi = 0;
 
-static void ParseCmd(const char *cmd, int fdlog ){
+static void ParseCmd(const char *cmd, int fdlog)
+{
   int qv = midi.fader;
   int pgm;
   int pst;
-  
+
   //   printf(">%s\n", cmd );
   int addr = 0;
-  if( sscanf( cmd, "DTH:%x,%02x%02x%04x;", &addr, &pgm, &pst, &qv )
-	       == 4 ){
-//     printf(">%s\t", cmd );
-    if( qv == 0 ) qv = 127*32;
-    qv/=32; // 232c(0..255) to midi(0..127)
-//printf("%s PGM:%d, PST:%d, Fout:%d\n",cmd, pgm, pst, qv);
+  if (sscanf(cmd, "DTH:%x,%02x%02x%04x;", &addr, &pgm, &pst, &qv) == 4)
+  {
+    //     printf(">%s\t", cmd );
+    if (qv == 0)
+      qv = 127 * 32;
+    qv /= 32; // 232c(0..255) to midi(0..127)
+              // printf("%s PGM:%d, PST:%d, Fout:%d\n",cmd, pgm, pst, qv);
     midi.pgm_a = pgm - 31;
     midi.pst_b = pst - 31;
     midi.fader = qv;
     midi.tick = nanosec_now();
     disp();
-    doOutputTclog( fdlog );
-    return ;
+    doOutputTclog(fdlog);
+    return;
   }
 
-
-  if( sscanf( cmd, "VER:%[^;];", prod) == 1 ){
-	  printf("'%s'\n", prod);
-    return ;
+  if (sscanf(cmd, "VER:%[^;];", prod) == 1)
+  {
+    printf("'%s'\n", prod);
+    return;
   }
 }
 
 static char cmd_queue[64];
 static int cmd_len = 0;
 
-void send_232c_pgm_v160( int ch ){
-  cmd_len = sprintf(cmd_queue, "\2DTH:002100,%02x;", ch+31);
+void send_232c_pgm_v160(int ch)
+{
+  cmd_len = sprintf(cmd_queue, "\2DTH:002100,%02x;", ch + 31);
 }
-void send_232c_pst_v160( int ch ){
-  cmd_len = sprintf(cmd_queue, "\2DTH:002101,%02x;", ch+31);
+void send_232c_pst_v160(int ch)
+{
+  cmd_len = sprintf(cmd_queue, "\2DTH:002101,%02x;", ch + 31);
 }
-void send_232c_ato_v160(){
-//  cmd_len = sprintf(cmd_queue, "\2DTH:002105,%02x;", 1);
+void send_232c_ato_v160()
+{
+  //  cmd_len = sprintf(cmd_queue, "\2DTH:002105,%02x;", 1);
 }
 
-
-
-static void proc_command( int fd, int fdlog )
+static void proc_command(int fd, int fdlog)
 {
   long long now = nanosec_now();
-  
-  if( send_ack == 0 ){
-    if( cmd_len == 0 ){
-        write(fd, QueryFader, sizeof(QueryFader) - 1);
-	send_ack = now;
-    }else{
-        write(fd, cmd_queue, cmd_len);
-	send_ack = now;
-	cmd_len = 0;
+
+  if (send_ack == 0)
+  {
+    if (cmd_len == 0)
+    {
+      write(fd, QueryFader, sizeof(QueryFader) - 1);
+      send_ack = now;
     }
-	//        printf("Q");
+    else
+    {
+      write(fd, cmd_queue, cmd_len);
+      send_ack = now;
+      cmd_len = 0;
+    }
+    //        printf("Q");
   }
 
-  if( send_ack > 0 && now - send_ack > timeout_ack ){
-    fprintf(stderr,"ack timeout : %lld\n", now-send_ack);
+  if (send_ack > 0 && now - send_ack > timeout_ack)
+  {
+    fprintf(stderr, "ack timeout : %lld\n", now - send_ack);
     send_ack = 0;
-    return ;
+    return;
   }
 
 reread:
-  if( !can_read(fd) )
-    return ;
-  while( 1 ){ 
+  if (!can_read(fd))
+    return;
+  while (1)
+  {
     int cmd = getbyte(fd);
-    if( cmd < 0)
+    if (cmd < 0)
       goto reread;
 
     // STX. clear buffer.
-    if( cmd == STX ){
+    if (cmd == STX)
+    {
       bi = 0;
       send_ack = 0;
       continue;
     }
-    if( cmd == ACK ){
+    if (cmd == ACK)
+    {
       send_ack = 0;
       break;
     }
 
     buf[bi++] = cmd;
 
-    if( cmd == ';'){
+    if (cmd == ';')
+    {
       buf[bi] = 0;
       ParseCmd(buf, fdlog);
       bi = 0;
       break;
     }
   }
-    
 }
-
 
 extern int check_v160(int fd, int fdlog)
 {
-  if( fd > 0 ) {
-    struct termios tio={};
+  if (fd > 0)
+  {
+    struct termios tio = {};
     tcgetattr(fd, &tio);
-    //cfsetspeed(&tio, B115200);
-    tio.c_iflag = IGNBRK | IGNPAR | IXON ;
+    // cfsetspeed(&tio, B115200);
+    tio.c_iflag = IGNBRK | IGNPAR | IXON;
     tio.c_oflag = 0;
-    tio.c_cflag = B115200 | CS8 | CREAD | CLOCAL ;
+    tio.c_cflag = B115200 | CS8 | CREAD | CLOCAL;
     tio.c_lflag = 0;
-    
+
     tcflush(fd, TCIFLUSH);
     tcsetattr(fd, TCSANOW, &tio);
   }
@@ -224,10 +224,9 @@ static void init_232(int fd)
 int loop_switch232c_v160(int fd, int fdlog)
 {
   init_232(fd);
-  while(1){
-    proc_command( fd, fdlog );    
+  while (1)
+  {
+    proc_command(fd, fdlog);
   }
   return 1;
 }
-
-

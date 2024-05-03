@@ -12,10 +12,8 @@ static void send_pgm(int gpfd, struct model *m)
 {
   int pgm_bit = m->pgm_a == 0 ? 0 : 1 << (m->pgm_a - 1);
   int pst_bit = m->pst_b == 0 ? 0 : 1 << (m->pst_b - 1);
-  int pgm_bit = m->pgm_a == 0 ? 0 : 1<<(m->pgm_a-1);
-  int pst_bit = m->pst_b == 0 ? 0 : 1<<(m->pst_b-1);
-  if( m->fader == 127 || m->fader == 0) 
-	  pst_bit = 0;
+  if (m->fader == 127 || m->fader == 0)
+    pst_bit = 0;
 
   char buf[32];
   int len = sprintf(buf, "TXDT %02x00\r\n", pgm_bit | pst_bit);
@@ -30,20 +28,20 @@ static void send_pgm(int gpfd, struct model *m)
 int sendpgm_loop(int fd)
 {
   printf("sendpgm im920(%d)\n", fd);
-  if( fd > 0 )
-    {
-      struct termios tio;
-      tcgetattr(fd, &tio);
-      tio.c_iflag = IGNBRK | IGNPAR | IXON ;
-      tio.c_oflag = 0;
-      tio.c_cflag = CS8 | CREAD | CLOCAL ;
-      tio.c_lflag = 0;
-      
-      cfsetspeed(&tio, B19200);
-      tcflush(fd, TCIFLUSH);
-      tcsetattr(fd, TCSANOW, &tio);
-    }
-  int timfd = timerfd_create(   CLOCK_MONOTONIC, 0 );
+  if (fd > 0)
+  {
+    struct termios tio;
+    tcgetattr(fd, &tio);
+    tio.c_iflag = IGNBRK | IGNPAR | IXON;
+    tio.c_oflag = 0;
+    tio.c_cflag = CS8 | CREAD | CLOCAL;
+    tio.c_lflag = 0;
+
+    cfsetspeed(&tio, B19200);
+    tcflush(fd, TCIFLUSH);
+    tcsetattr(fd, TCSANOW, &tio);
+  }
+  int timfd = timerfd_create(CLOCK_MONOTONIC, 0);
 
   struct itimerspec ts = {};
   ts.it_interval.tv_sec = 0;
@@ -60,7 +58,6 @@ int sendpgm_loop(int fd)
     send_pgm(fd, &mcopy);
   }
 }
-
 
 #ifdef SINGLE
 #include <unistd.h>
