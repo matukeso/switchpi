@@ -54,28 +54,6 @@ static int can_read(int fd)
     return 0;
 }
 
-extern void output_csv(const char *msg, int byte);
-
-static void doOutputTclog(int fdlog)
-{
-#ifdef SINGLE
-  return;
-#endif
-  char tc[12];
-  sprintf(tc, "%08d", current_tc());
-
-  char buf[512];
-
-  int len = sprintf(buf, "%c%c:%c%c:%c%c.%c%c QPL:%d,%d\n",
-                    tc[0], tc[1], tc[2], tc[3], tc[4], tc[5], tc[6], tc[7],
-                    midi.pgm_a - 1, midi.pst_b - 1);
-  if (fdlog > 0)
-  {
-    write(fdlog, buf, len);
-  }
-  output_csv(buf, len);
-}
-
 static char prod[128];
 static char buf[256];
 static int bi = 0;

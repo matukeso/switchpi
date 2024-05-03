@@ -1,4 +1,6 @@
 #pragma once
+#include <time.h>
+
 struct model {
   int pgm_a;
   int pst_b;
@@ -16,16 +18,21 @@ extern int current_tc();
 
  int loop_switch232c(int fd, int fdlog);
 
- const char *ttyUSB(int i);
- int open232c( const char *name );
- int openusb232c( int i );
- 
  int ocloop(int fd, int fdlog);
 
  int midiloop(int fd, int fdlog);
  int tcserloop(int fd);
 
  int sendpgm_loop(int gpfd);
+
+
+ const char *ttyUSB(int i);
+ int open232c( const char *name );
+ int openusb232c( int i );
+ extern int can_read_fd(int fd, int ms_timeout);
+void doOutputTclog(int fdlog);
+
+#define strcmp_findimm( str, find ) memcmp( str, find, sizeof(find)-1) == 0
 
 struct midiarg
 {
