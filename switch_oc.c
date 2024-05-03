@@ -103,26 +103,29 @@ static void proc_command(int fd, int fdlog)
     extract_oc_state(&oc, &midi.pgm_a, &midi.pst_b);
     //      printf("%d %d\n", midi.pgm_a, midi.pst_b );
 
-//OCには順序がないので、2bit立っているとPGN/PSTの区別ができない。
-//1bitのみであればPGM_aなので、覚えておく。
-      midi.tick = nanosec_now();
-      if( midi.pst_b == 0 ){
-	midi.start_fader = midi.pgm_a;
-	midi.fader = 0;
+    // OCには順序がないので、2bit立っているとPGN/PSTの区別ができない。
+    // 1bitのみであればPGM_aなので、覚えておく。
+    midi.tick = nanosec_now();
+    if (midi.pst_b == 0)
+    {
+      midi.start_fader = midi.pgm_a;
+      midi.fader = 0;
+    }
+    else
+    {
+      if (midi.pst_b == midi.start_fader)
+      {
+        swap(&midi.pgm_a, &midi.pst_b);
       }
-      else{
-	if( midi.pst_b == midi.start_fader ){
-	  swap( &midi.pgm_a, &midi.pst_b );
-	}
-      //FADINGを装う。
-	midi.fader = 64;
-      }
+      // FADINGを装う。
+      midi.fader = 64;
+    }
 
-
-      if( 0 != memcmp( &prev_oc_state , &oc, sizeof(oc)) ){
-	    doOutputTclog( fdlog );
-      }
-      prev_oc_state = oc;
+    if (0 != memcmp(&prev_oc_state, &oc, sizeof(oc)))
+    {
+      doOutputTclog(fdlog);
+    }
+    prev_oc_state = oc;
 
     if (0 != memcmp(&prev_oc_state, &oc, sizeof(oc)))
     {
