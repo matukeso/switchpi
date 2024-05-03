@@ -46,7 +46,7 @@ static const char PING[] = "PING\n\n";
 void proc_line(const char *line)
 {
   static int mode;
-  printf("L:%s\n", line);
+//  printf("L:%s\n", line);
   if (strcmp_findimm(line, "ACK"))
   {
     midi.tick = nanosec_now();
