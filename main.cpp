@@ -89,16 +89,6 @@ int main(int argc, char *argv[])
     pthread_create(&thmidi, NULL, run_midi, (void *)&marg);
   }
 
-  pthread_t th_tcser;
-  pthread_create(&th_tcser, NULL, run_tcser, (void *)gpfd);
-
-  {
-    int fd = open232c("/dev/ttyUSB0");
-
-    pthread_t th_sendpgm;
-    pthread_create(&th_sendpgm, NULL, run_sendpgm, (void *)fd);
-  }
-
   QApplication a(argc, argv);
   Dialog w;
   w.show();
